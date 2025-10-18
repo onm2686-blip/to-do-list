@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List 任务管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            color: #0984e3;
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .emoji {
+            font-size: 2.8rem;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .task-input:focus {
+            border-color: #0984e3;
+            box-shadow: 0 0 0 3px rgba(9, 132, 227, 0.1);
+        }
+
+        .category-select, .priority-select, .date-input {
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .category-select:focus, .priority-select:focus, .date-input:focus {
+            border-color: #0984e3;
+            box-shadow: 0 0 0 3px rgba(9, 132, 227, 0.1);
+        }
+
+        .add-btn {
+            padding: 15px 25px;
+            background: #00b894;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        }
+
+        .add-btn:hover {
+            background: #00a085;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            padding: 0 5px;
+        }
+
+        .filter-btn {
+            padding: 10px 18px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .filter-btn.active {
+            background: #0984e3;
+            color: white;
+            border-color: #0984e3;
+            box-shadow: 0 4px 10px rgba(9, 132, 227, 0.2);
+        }
+
+        .filter-btn:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        .task-list {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 18px 20px;
+            border-bottom: 1px solid #f1f3f4;
+            transition: all 0.3s;
+            position: relative;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .task-item:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .task-checkbox {
+            margin-right: 15px;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #00b894;
+        }
+
+        .task-number {
+            margin-right: 15px;
+            font-weight: bold;
+            color: #0984e3;
+            min-width: 25px;
+            font-size: 1.1rem;
+        }
+
+        .task-text {
+            flex: 1;
+            padding: 5px 0;
+            transition: all 0.3s;
+            font-size: 1.05rem;
+        }
+
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #adb5bd;
+        }
+
+        .task-edit {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #00b894;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            outline: none;
+            background: white;
+        }
+
+        .task-tag, .task-priority, .task-date {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-left: 10px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .task-tag:hover, .task-priority:hover, .task-date:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .work-tag {
+            background: #e17055;
+        }
+
+        .life-tag {
+            background: #00b894;
+        }
+
+        .study-tag {
+            background: #fdcb6e;
+        }
+
+        .high-priority {
+            background: #e84393;
+        }
+
+        .medium-priority {
+            background: #fdcb6e;
+        }
+
+        .low-priority {
+            background: #00b894;
+        }
+
+        .date-display {
+            background: #74b9ff;
+        }
+
+        .edit-control {
+            display: none;
+            margin-left: 10px;
+        }
+
+        .delete-btn {
+            margin-left: 10px;
+            background: none;
+            border: none;
+            color: #adb5bd;
+            font-size: 22px;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn:hover {
+            background: #e17055;
+            color: white;
+        }
+
+        .task-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .task-count {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .clear-btn {
+            padding: 10px 20px;
+            background: #e17055;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            box-shadow: 0 4px 10px rgba(225, 112, 85, 0.2);
+        }
+
+        .clear-btn:hover {
+            background: #d65a3d;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(225, 112, 85, 0.3);
+        }
+
+        .developer {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #333; /* 修改为深灰色 */
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #adb5bd;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .empty-text {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .empty-subtext {
+            font-size: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .emoji {
+                font-size: 2rem;
+            }
+            
+            .input-section {
+                flex-direction: column;
+            }
+            
+            .task-input, .category-select, .priority-select, .date-input, .add-btn {
+                width: 100%;
+            }
+            
+            .task-item {
+                flex-wrap: wrap;
+            }
+            
+            .task-text, .task-edit {
+                min-width: 100%;
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+            
+            .footer {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .developer {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin-top: 20px;
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <span class="emoji">📝</span>
+                To-Do List
+                <span class="emoji">✅</span>
+            </h1>
+            <p class="subtitle">轻松管理您的日常任务，提高效率！</p>
+        </header>
+        
+        <div class="input-section">
+            <input type="text" class="task-input" placeholder="添加新任务..." id="taskInput">
+            <select class="category-select" id="categorySelect">
+                <option value="work" selected>工作</option>
+                <option value="life">生活</option>
+                <option value="study">学习</option>
+            </select>
+            <select class="priority-select" id="prioritySelect">
+                <option value="high" selected>高优先级</option>
+                <option value="medium">中优先级</option>
+                <option value="low">低优先级</option>
+            </select>
+            <input type="datetime-local" class="date-input" id="dateInput">
+            <button class="add-btn" id="addBtn">添加任务</button>
+        </div>
+        
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all">全部任务</button>
+            <button class="filter-btn" data-filter="active">未完成</button>
+            <button class="filter-btn" data-filter="completed">已完成</button>
+            <button class="filter-btn" data-filter="high">高优先级</button>
+        </div>
+        
+        <ul class="task-list" id="taskList">
+            <!-- 任务项将在这里动态生成 -->
+        </ul>
+        
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">暂无任务</div>
+            <div class="empty-subtext">添加您的第一个任务开始吧！</div>
+        </div>
+        
+        <div class="footer">
+            <div class="task-count" id="taskCount">0 个任务未完成</div>
+            <button class="clear-btn" id="clearBtn">清除已完成</button>
+        </div>
+    </div>
+    
+    <div class="developer">开发者: Monson</div>
+
+    <script>
+        // 任务管理类
+        class TaskManager {
+            constructor() {
+                this.tasks = this.loadTasks();
+                this.currentFilter = 'all';
+                this.nextId = this.tasks.length > 0 ? Math.max(...this.tasks.map(task => task.id)) + 1 : 1;
+                this.initEventListeners();
+                this.renderTasks();
+                this.updateTaskCount();
+                this.toggleEmptyState();
+            }
+
+            // 初始化事件监听器
+            initEventListeners() {
+                const addBtn = document.getElementById('addBtn');
+                const taskInput = document.getElementById('taskInput');
+                const clearBtn = document.getElementById('clearBtn');
+                const filterBtns = document.querySelectorAll('.filter-btn');
+                
+                // 添加任务事件
+                addBtn.addEventListener('click', () => this.addTask());
+                taskInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTask();
+                });
+                
+                // 清除已完成任务事件
+                clearBtn.addEventListener('click', () => this.clearCompleted());
+                
+                // 过滤器事件
+                filterBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        filterBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.currentFilter = btn.dataset.filter;
+                        this.renderTasks();
+                    });
+                });
+            }
+
+            // 添加新任务
+            addTask() {
+                const taskInput = document.getElementById('taskInput');
+                const categorySelect = document.getElementById('categorySelect');
+                const prioritySelect = document.getElementById('prioritySelect');
+                const dateInput = document.getElementById('dateInput');
+                
+                const text = taskInput.value.trim();
+                if (!text) return;
+                
+                const task = {
+                    id: this.nextId++,
+                    text: text,
+                    completed: false,
+                    category: categorySelect.value,
+                    priority: prioritySelect.value,
+                    datetime: dateInput.value || null
+                };
+                
+                this.tasks.push(task);
+                taskInput.value = '';
+                dateInput.value = '';
+                
+                this.saveTasks();
+                this.renderTasks();
+                this.updateTaskCount();
+                this.toggleEmptyState();
+            }
+
+            // 删除任务
+            deleteTask(id) {
+                this.tasks = this.tasks.filter(task => task.id !== id);
+                this.saveTasks();
+                this.renderTasks();
+                this.updateTaskCount();
+                this.toggleEmptyState();
+            }
+
+            // 切换任务完成状态
+            toggleTask(id) {
+                const task = this.tasks.find(task => task.id === id);
+                if (task) {
+                    task.completed = !task.completed;
+                    this.saveTasks();
+                    this.renderTasks();
+                    this.updateTaskCount();
+                }
+            }
+
+            // 编辑任务文本
+            editTask(id, newText) {
+                const task = this.tasks.find(task => task.id === id);
+                if (task && newText.trim()) {
+                    task.text = newText.trim();
+                    this.saveTasks();
+                    this.renderTasks();
+                }
+            }
+
+            // 编辑任务标签
+            editTaskCategory(id, newCategory) {
+                const task = this.tasks.find(task => task.id === id);
+                if (task) {
+                    task.category = newCategory;
+                    this.saveTasks();
+                    this.renderTasks();
+                }
+            }
+
+            // 编辑任务优先级
+            editTaskPriority(id, newPriority) {
+                const task = this.tasks.find(task => task.id === id);
+                if (task) {
+                    task.priority = newPriority;
+                    this.saveTasks();
+                    this.renderTasks();
+                }
+            }
+
+            // 编辑任务截止时间
+            editTaskDateTime(id, newDateTime) {
+                const task = this.tasks.find(task => task.id === id);
+                if (task) {
+                    task.datetime = newDateTime;
+                    this.saveTasks();
+                    this.renderTasks();
+                }
+            }
+
+            // 清除已完成任务
+            clearCompleted() {
+                this.tasks = this.tasks.filter(task => !task.completed);
+                this.saveTasks();
+                this.renderTasks();
+                this.updateTaskCount();
+                this.toggleEmptyState();
+            }
+
+            // 格式化日期时间显示
+            formatDateTime(datetimeStr) {
+                if (!datetimeStr) return '';
+                
+                const date = new Date(datetimeStr);
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                // 如果是今天
+                if (date >= today && date < tomorrow) {
+                    return `今天 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                }
+                
+                // 如果是明天
+                const dayAfterTomorrow = new Date(tomorrow);
+                dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+                if (date >= tomorrow && date < dayAfterTomorrow) {
+                    return `明天 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                }
+                
+                // 其他情况显示完整日期
+                return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+            }
+
+            // 任务排序函数
+            sortTasks(tasks) {
+                return tasks.sort((a, b) => {
+                    // 有截止时间的任务排在前面
+                    if (a.datetime && !b.datetime) return -1;
+                    if (!a.datetime && b.datetime) return 1;
+                    
+                    // 都有截止时间，按时间先后排序
+                    if (a.datetime && b.datetime) {
+                        return new Date(a.datetime) - new Date(b.datetime);
+                    }
+                    
+                    // 都没有截止时间，按创建顺序排序
+                    return a.id - b.id;
+                });
+            }
+
+            // 显示/隐藏空状态
+            toggleEmptyState() {
+                const emptyState = document.getElementById('emptyState');
+                const taskList = document.getElementById('taskList');
+                
+                let filteredTasks = this.tasks;
+                
+                // 应用过滤器
+                if (this.currentFilter === 'active') {
+                    filteredTasks = this.tasks.filter(task => !task.completed);
+                } else if (this.currentFilter === 'completed') {
+                    filteredTasks = this.tasks.filter(task => task.completed);
+                } else if (this.currentFilter === 'high') {
+                    filteredTasks = this.tasks.filter(task => task.priority === 'high');
+                }
+                
+                if (filteredTasks.length === 0) {
+                    emptyState.style.display = 'block';
+                    taskList.style.display = 'none';
+                } else {
+                    emptyState.style.display = 'none';
+                    taskList.style.display = 'block';
+                }
+            }
+
+            // 渲染任务列表
+            renderTasks() {
+                const taskList = document.getElementById('taskList');
+                taskList.innerHTML = '';
+                
+                let filteredTasks = this.tasks;
+                
+                // 应用过滤器
+                if (this.currentFilter === 'active') {
+                    filteredTasks = this.tasks.filter(task => !task.completed);
+                } else if (this.currentFilter === 'completed') {
+                    filteredTasks = this.tasks.filter(task => task.completed);
+                } else if (this.currentFilter === 'high') {
+                    filteredTasks = this.tasks.filter(task => task.priority === 'high');
+                }
+                
+                // 按截止时间排序
+                const sortedTasks = this.sortTasks(filteredTasks);
+                
+                // 渲染排序后的任务，并分配正确的序号
+                sortedTasks.forEach((task, index) => {
+                    const taskItem = document.createElement('li');
+                    taskItem.className = 'task-item';
+                    taskItem.dataset.id = task.id;
+                    
+                    const categoryClass = {
+                        'work': 'work-tag',
+                        'life': 'life-tag',
+                        'study': 'study-tag'
+                    }[task.category];
+                    
+                    const priorityClass = {
+                        'high': 'high-priority',
+                        'medium': 'medium-priority',
+                        'low': 'low-priority'
+                    }[task.priority];
+                    
+                    const categoryText = {
+                        'work': '工作',
+                        'life': '生活',
+                        'study': '学习'
+                    }[task.category];
+                    
+                    const priorityText = {
+                        'high': '高',
+                        'medium': '中',
+                        'low': '低'
+                    }[task.priority];
+                    
+                    taskItem.innerHTML = `
+                        <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''}>
+                        <span class="task-number">${index + 1}</span>
+                        <span class="task-text ${task.completed ? 'completed' : ''}">${this.escapeHtml(task.text)}</span>
+                        <span class="task-tag ${categoryClass}" data-type="category">${categoryText}</span>
+                        <span class="task-priority ${priorityClass}" data-type="priority">${priorityText}优先级</span>
+                        ${task.datetime ? `<span class="task-date date-display" data-type="datetime">${this.formatDateTime(task.datetime)}</span>` : ''}
+                        <button class="delete-btn">×</button>
+                    `;
+                    
+                    taskList.appendChild(taskItem);
+                    
+                    // 添加事件监听器
+                    const checkbox = taskItem.querySelector('.task-checkbox');
+                    const deleteBtn = taskItem.querySelector('.delete-btn');
+                    const taskText = taskItem.querySelector('.task-text');
+                    const taskTag = taskItem.querySelector('.task-tag');
+                    const taskPriority = taskItem.querySelector('.task-priority');
+                    const taskDate = taskItem.querySelector('.task-date');
+                    
+                    checkbox.addEventListener('change', () => this.toggleTask(task.id));
+                    deleteBtn.addEventListener('click', () => this.deleteTask(task.id));
+                    
+                    // 双击编辑任务文本
+                    taskText.addEventListener('dblclick', () => {
+                        const currentText = taskText.textContent;
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'task-edit';
+                        input.value = currentText;
+                        
+                        taskItem.replaceChild(input, taskText);
+                        input.focus();
+                        input.select();
+                        
+                        const saveEdit = () => {
+                            this.editTask(task.id, input.value);
+                        };
+                        
+                        const cancelEdit = () => {
+                            taskItem.replaceChild(taskText, input);
+                        };
+                        
+                        input.addEventListener('blur', saveEdit);
+                        input.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') {
+                                saveEdit();
+                            } else if (e.key === 'Escape') {
+                                cancelEdit();
+                            }
+                        });
+                    });
+                    
+                    // 点击编辑任务标签
+                    if (taskTag) {
+                        taskTag.addEventListener('click', () => {
+                            const select = document.createElement('select');
+                            select.className = 'edit-control';
+                            select.innerHTML = `
+                                <option value="work" ${task.category === 'work' ? 'selected' : ''}>工作</option>
+                                <option value="life" ${task.category === 'life' ? 'selected' : ''}>生活</option>
+                                <option value="study" ${task.category === 'study' ? 'selected' : ''}>学习</option>
+                            `;
+                            
+                            taskItem.replaceChild(select, taskTag);
+                            select.style.display = 'block';
+                            select.focus();
+                            
+                            const saveEdit = () => {
+                                this.editTaskCategory(task.id, select.value);
+                            };
+                            
+                            const cancelEdit = () => {
+                                taskItem.replaceChild(taskTag, select);
+                            };
+                            
+                            select.addEventListener('blur', saveEdit);
+                            select.addEventListener('change', saveEdit);
+                            select.addEventListener('keypress', (e) => {
+                                if (e.key === 'Escape') {
+                                    cancelEdit();
+                                }
+                            });
+                        });
+                    }
+                    
+                    // 点击编辑任务优先级
+                    if (taskPriority) {
+                        taskPriority.addEventListener('click', () => {
+                            const select = document.createElement('select');
+                            select.className = 'edit-control';
+                            select.innerHTML = `
+                                <option value="high" ${task.priority === 'high' ? 'selected' : ''}>高优先级</option>
+                                <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>中优先级</option>
+                                <option value="low" ${task.priority === 'low' ? 'selected' : ''}>低优先级</option>
+                            `;
+                            
+                            taskItem.replaceChild(select, taskPriority);
+                            select.style.display = 'block';
+                            select.focus();
+                            
+                            const saveEdit = () => {
+                                this.editTaskPriority(task.id, select.value);
+                            };
+                            
+                            const cancelEdit = () => {
+                                taskItem.replaceChild(taskPriority, select);
+                            };
+                            
+                            select.addEventListener('blur', saveEdit);
+                            select.addEventListener('change', saveEdit);
+                            select.addEventListener('keypress', (e) => {
+                                if (e.key === 'Escape') {
+                                    cancelEdit();
+                                }
+                            });
+                        });
+                    }
+                    
+                    // 点击编辑任务截止时间
+                    if (taskDate) {
+                        taskDate.addEventListener('click', () => {
+                            const input = document.createElement('input');
+                            input.type = 'datetime-local';
+                            input.className = 'edit-control';
+                            input.value = task.datetime;
+                            
+                            taskItem.replaceChild(input, taskDate);
+                            input.style.display = 'block';
+                            input.focus();
+                            
+                            const saveEdit = () => {
+                                this.editTaskDateTime(task.id, input.value);
+                            };
+                            
+                            const cancelEdit = () => {
+                                taskItem.replaceChild(taskDate, input);
+                            };
+                            
+                            input.addEventListener('blur', saveEdit);
+                            input.addEventListener('change', saveEdit);
+                            input.addEventListener('keypress', (e) => {
+                                if (e.key === 'Escape') {
+                                    cancelEdit();
+                                }
+                            });
+                        });
+                    }
+                });
+                
+                this.toggleEmptyState();
+            }
+
+            // 更新任务计数
+            updateTaskCount() {
+                const activeTasks = this.tasks.filter(task => !task.completed).length;
+                const taskCount = document.getElementById('taskCount');
+                taskCount.textContent = `${activeTasks} 个任务未完成`;
+            }
+
+            // 保存任务到本地存储
+            saveTasks() {
+                localStorage.setItem('todoTasks', JSON.stringify(this.tasks));
+                localStorage.setItem('todoNextId', this.nextId);
+            }
+
+            // 从本地存储加载任务
+            loadTasks() {
+                const savedTasks = localStorage.getItem('todoTasks');
+                const savedNextId = localStorage.getItem('todoNextId');
+                
+                if (savedNextId) {
+                    this.nextId = parseInt(savedNextId);
+                }
+                
+                return savedTasks ? JSON.parse(savedTasks) : [];
+            }
+
+            // HTML转义防止XSS
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new TaskManager();
+        });
+    </script>
+</body>
+</html>
